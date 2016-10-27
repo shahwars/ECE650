@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <sys/time.h>
 
+#define MAX_NUMBER 2000
+
 int *buffer;
 int N, B;
 
@@ -19,12 +21,14 @@ void *producer(void  *params)
 {
     srand(time(NULL));
     int i = 0;
+    int num = 0;
     while ( i<N )
     {
         while(((front+1) % B) == end);
 
-        buffer[front] = rand();
-
+        num = rand() % MAX_NUMBER;
+        buffer[front] = num;
+       // printf("Produced : %d\n", num);
         pthread_mutex_lock(&mutex);
         front = (front + 1) % B;
         pthread_mutex_unlock(&mutex);
@@ -43,14 +47,29 @@ void *consumer(void *params)
         while (front == end);
 
         num = buffer[end];
-        //printf("\n%d\n", buffer[end]);
+       // printf("Consumed : %d\n", num);
+        
         pthread_mutex_lock(&mutex);
-
         end = (end + 1) % B;
         pthread_mutex_unlock(&mutex);
 
         i++;
     }
+}
+
+/* 
+    Utility function just to calculate time and manipulate seconds and microseconds
+    which are inside the struct timeval 
+    returns time value in seconds
+*/
+long double time_calculation(struct timeval start_t, struct timeval end_t)
+{
+    /* timing extraction from the data structure */
+    long double start_t_usec = (long double) (start_t.tv_sec * 1000000 + start_t.tv_usec);
+    long double end_t_usec = (long double) (end_t.tv_sec * 1000000 + end_t.tv_usec);
+
+    /* Keep the initialization time as a difference */
+    return (end_t_usec - start_t_usec)/1000000;
 }
 
 int main(int argc, char *argv[])
@@ -59,8 +78,6 @@ int main(int argc, char *argv[])
     pthread_attr_t attr;
 
     struct timeval start_t, init_t, end_t;
-    long double interval_usec = 0.0;
-    long double initialzation_t_usec, transmission_t_usec, init_t_usec, start_t_usec, end_t_usec;
 
     /* Start measuring time for initialization */
     gettimeofday(&start_t, NULL);
@@ -103,24 +120,16 @@ int main(int argc, char *argv[])
     /* Check point for initialization time measurement */
     gettimeofday(&init_t, NULL);
 
-    /* timing extraction from the data structure */
-    start_t_usec = (long double) (start_t.tv_sec * 1000000 + start_t.tv_usec);
-    init_t_usec = (long double) (init_t.tv_sec * 1000000 + init_t.tv_usec);
-
-    /* Keep the initialization time as a difference */
-    initialzation_t_usec = init_t_usec - start_t_usec;
+  
+    // initialzation_t_usec = init_t_usec - start_t_usec;
     pthread_join(producer_id, NULL);
     pthread_join(consumer_id, NULL);
 
-    /* checkpoint for threads ending */
+    /* checkpoint for threads ending. This will only execute when consumer will end */
     gettimeofday(&end_t, NULL);
 
-    init_t_usec = (long double) (init_t.tv_sec * 1000000 + init_t.tv_usec);
-    end_t_usec = (long double) (end_t.tv_sec * 1000000 + end_t.tv_usec);
-
-    transmission_t_usec = end_t_usec - init_t_usec;
-
-    printf("Initialization time = %Lf in seconds\n", (initialzation_t_usec / 1000000));
-    printf("Time to transfer data = %Lf seconds\n", (transmission_t_usec / 1000000));
-
+    
+    printf("%d , %d , %Lf , %Lf\n", N, B, 
+           time_calculation(start_t, init_t) , 
+           time_calculation(init_t, end_t));
 }
