@@ -7,7 +7,7 @@
 #define MAX_NUMBER 2000
 
 int *buffer;
-int N, B;
+int run_time, B;
 
 /* Variabled to implement bounded buffer. */
 int front = 0;
@@ -22,7 +22,7 @@ void *producer(void  *params)
     srand(time(NULL));
     int i = 0;
     int num = 0;
-    while ( i<N )
+    while ( i < N )
     {
         while(((front+1) % B) == end);
 
@@ -42,7 +42,7 @@ void *consumer(void *params)
 {
     int i = 0;
     int num = 0;
-    while ( i<N )
+    while ( i < N )
     {
         while (front == end);
 
