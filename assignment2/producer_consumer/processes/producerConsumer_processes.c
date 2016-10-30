@@ -17,7 +17,7 @@ void die(char *s)
   exit(1);
 }
 
-struct msg
+struct my_msg
 {
     long    m_type;
     int     mesg;
@@ -25,7 +25,7 @@ struct msg
 
 void consumer(void)
 {
-    struct msg rcvbuffer;
+    struct my_msg rcvbuffer;
     int msqid; 
     key_t key = 1234;
     if ((msqid = msgget(key, 0666)) < 0)
@@ -52,7 +52,7 @@ void producer(void)
     int msqid;
     int msgflg = IPC_CREAT | 0666;
     key_t key;
-    struct msg msg_buf;
+    struct my_msg msg_buf;
     struct msqid_ds msqid_buf;
 
     /* Arbitrary value for key to initialize the message queue */ 

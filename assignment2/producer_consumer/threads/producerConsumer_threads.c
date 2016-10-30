@@ -7,7 +7,7 @@
 #define MAX_NUMBER 2000
 
 int *buffer;
-int run_time, B;
+int run_time, buffer_size;
 
 /* Variabled to implement bounded buffer. */
 int front = 0;
@@ -50,7 +50,7 @@ void *consumer(void *params)
        // printf("Consumed : %d\n", num);
         
         pthread_mutex_lock(&mutex);
-        end = (end + 1) % B;
+        end = (end + 1) % Bdd;
         pthread_mutex_unlock(&mutex);
 
         i++;
@@ -78,37 +78,31 @@ int main(int argc, char *argv[])
     pthread_attr_t attr;
 
     struct timeval start_t, init_t, end_t;
-
+    
     /* Start measuring time for initialization */
     gettimeofday(&start_t, NULL);
 
     /* Error check if there are more or less arguments than required*/
-    if ( argc != 3) 
+    if ( argc != 5) 
     {
         fprintf(stderr, "usage: producer_consumer <Number of integers> <Buffer Size>");
         return -1;
     }
 
     /* Error check if one of the arguments is negative.*/
-    if ( atoi(argv[1]) < 0 || atoi(argv[2]) < 0) 
+    if ( atoi(argv[1]) < 0 || atoi(argv[2]) < 0 || atoi(argv[3]) < 0 || atoi(argv[4]) < 0 ) 
     { 
-        fprintf(stderr, "Both arguments must be positive integers\n");
+        fprintf(stderr, "Every argument must be arguments must be positive integers\n");
         return -1;
     }
 
-    /* Check if the arguments satisfy the condition N > B*/
-    if ( atoi(argv[1]) < atoi(argv[2]) ) 
-    {
-        fprintf(stderr, "Number of integers must be greater than buffer size.\n");
-        return -1;
-    }
 
     /* Extract the arguments to integers.*/
-    N = atoi(argv[1]);
-    B = atoi(argv[2]);
+    run_time = atoi(argv[1]);
+    buffer_size = atoi(argv[2]);
 
     /* Buffer allocation for shared memory between threads */
-	buffer = malloc(B * sizeof(int));
+	buffer = malloc(buffer_size * sizeof(int));
 
     /* Thread attribute initialization */
     pthread_attr_init(&attr);
