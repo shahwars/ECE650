@@ -12,8 +12,8 @@
 #define MAX_NUMBER						10000
 #define TIME_PERIOD_SECS				10
 
+int num_pro, num_con, time_spent, buffer_size;
 int run_time, p_i, Pt_min, Pt_max, Ct1_min, Ct1_max, Ct2_min, Ct2_max, Rs_min, Rs_max;
-int buffer_size;
 
 int msqid;
 
@@ -95,7 +95,7 @@ long double time_calculation(struct timeval start_t, struct timeval end_t)
     return (end_t_usec - start_t_usec)/1000000;
 }
 
-void initialize_globals(void)
+void initialize_globals(char *argv[])
 {
     request_number = mmap(NULL, sizeof *request_number, PROT_READ | PROT_WRITE, 
                     MAP_SHARED | MAP_ANONYMOUS, -1, 0);
@@ -117,6 +117,41 @@ void initialize_globals(void)
 
     consumer_block_time = mmap(NULL, sizeof *consumer_block_time, PROT_READ | PROT_WRITE, 
                     MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+
+    *request_number = 1;
+    *num_req_consumed = 0;
+    *periodic_req_count = 0;
+    *producer_blocked = 0;
+    *consumer_blocked = 0;
+    *producer_block_time = 0.0;
+    *consumer_block_time = 0.0;
+
+    /* Extract the arguments to integers.*/
+    run_time = atoi(argv[1]);
+    buffer_size = atoi(argv[2]);
+    num_pro = atoi(argv[3]);
+    num_con = atoi(argv[4]);
+    Rs_min = atoi(argv[5]);
+    Rs_max = atoi(argv[6]);
+    Pt_min = atoi(argv[7]);
+    Pt_max = atoi(argv[8]);
+    Ct1_min = atoi(argv[9]);
+    Ct1_max = atoi(argv[10]);
+    Ct2_min = atoi(argv[11]);
+    Ct2_max = atoi(argv[12]);
+    p_i = atoi(argv[13]);
+}
+
+
+void console(void)
+{
+        printf("CONSOLE MESSAGE: Total requests completed: %d\n", *num_req_consumed );
+        printf("CONSOLE MESSAGE: Number of times producers got blocked: %d\n", *producer_blocked);
+        printf("CONSOLE MESSAGE: Number of times consumers got blocked: %d\n", *consumer_blocked);
+        printf("CONSOLE MESSAGE: Summation of producers block time: %Lf seconds\n", *producer_block_time);
+        printf("CONSOLE MESSAGE: Average block time per producer: %Lf seconds\n", (*producer_block_time)/(num_pro));
+        printf("CONSOLE MESSAGE: Summation of consumers block time: %Lf seconds\n", *consumer_block_time);
+        printf("CONSOLE MESSAGE: Average block time per consumer: %Lf seconds\n", (*consumer_block_time)/(num_con));
 }
 
 void producer(int producer_num)
@@ -201,8 +236,6 @@ void consumer(int consumer_num)
 
 int main(int argc, char *argv[])
 {
-    int num_pro, num_con, time_spent;
-
     struct timeval start_t, end_t, p_t;
 
     /* Declare Message queue related variables */
@@ -210,8 +243,7 @@ int main(int argc, char *argv[])
     key_t key;
     struct msqid_ds msqid_buf;
 
-    initialize_globals();
-
+    
     gettimeofday(&start_t, NULL);
 
     /* Error check if there are more or less arguments than required*/
@@ -230,30 +262,9 @@ int main(int argc, char *argv[])
         return -1;
     }
     
-    /* Extract the arguments to integers.*/
-    run_time = atoi(argv[1]);
-    buffer_size = atoi(argv[2]);
-    num_pro = atoi(argv[3]);
-    num_con = atoi(argv[4]);
-    Rs_min = atoi(argv[5]);
-    Rs_max = atoi(argv[6]);
-    Pt_min = atoi(argv[7]);
-    Pt_max = atoi(argv[8]);
-    Ct1_min = atoi(argv[9]);
-    Ct1_max = atoi(argv[10]);
-    Ct2_min = atoi(argv[11]);
-    Ct2_max = atoi(argv[12]);
-    p_i = atoi(argv[13]);
+    initialize_globals(argv);
 
     pid_t pid;
-
-    *request_number = 1;
-    *num_req_consumed = 0;
-    *periodic_req_count = 0;
-    *producer_blocked = 0;
-    *consumer_blocked = 0;
-    *producer_block_time = 0.0;
-    *consumer_block_time = 0.0;
 
 	/* Arbitrary value for key to initialize the message queue */ 
     key = 1234;
@@ -315,14 +326,7 @@ int main(int argc, char *argv[])
 			}
    		}
 
-    	printf("CONSOLE MESSAGE: Total requests completed: %d\n", *num_req_consumed );
-        printf("CONSOLE MESSAGE: Number of times producers got blocked: %d\n", *producer_blocked);
-        printf("CONSOLE MESSAGE: Number of times consumers got blocked: %d\n", *consumer_blocked);
-        printf("CONSOLE MESSAGE: Summation of producers block time: %Lf seconds\n", *producer_block_time);
-        printf("CONSOLE MESSAGE: Average block time per producer: %Lf seconds\n", (*producer_block_time)/(num_pro));
-        printf("CONSOLE MESSAGE: Summation of consumers block time: %Lf seconds\n", *consumer_block_time);
-        printf("CONSOLE MESSAGE: Average block time per consumer: %Lf seconds\n", (*consumer_block_time)/(num_con));
-
+        console();
         msgctl(msqid, IPC_RMID, (struct msqid_ds *) 0);
         kill(0, SIGTERM);
 
