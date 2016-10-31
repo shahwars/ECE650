@@ -103,7 +103,8 @@ void *producer(void * thread_num)
 
 
     	gettimeofday(&start_p, NULL);
-        for (int r = 0; r < R_S; r++)
+        int r;
+        for (r = 0; r < R_S; r++)
         {
         	while(((front+1) % buffer_size) == end)
         	{
@@ -141,7 +142,6 @@ void *producer(void * thread_num)
 /* Function to start comsumer */
 void *consumer(void * thread_num)
 {
-    
     while(!end_program)
     {
     	int running_size;
@@ -158,7 +158,8 @@ void *consumer(void * thread_num)
 		struct request_int *received_req = malloc(sizeof(struct request_int) * running_size);
 
 		gettimeofday(&start_c, NULL);
-        for (int r = 0; r < running_size; r++)
+        int r;
+        for (r = 0; r < running_size; r++)
         {
         	while (front == end)
         	{

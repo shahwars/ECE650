@@ -171,7 +171,8 @@ void producer(int producer_num)
 	    req->req_num = (*request_number)++;
 	    req->req_size = R_S;
 
-	    for (int r = 0; r < R_S; r++)
+        int r;
+	    for (r = 0; r < R_S; r++)
         	req->request_content[r] = rand() % MAX_NUMBER;
 
 		/* 
@@ -288,7 +289,8 @@ int main(int argc, char *argv[])
     */
     msgctl(msqid, IPC_SET, &msqid_buf);
     
-    for (int i = 1; i <= num_pro + num_con; i++) 
+    int i;
+    for (i = 1; i <= num_pro + num_con; i++) 
     {
 	    pid = fork();
 	    if (pid) 
